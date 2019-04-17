@@ -10,6 +10,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.Map;
 
 /**
  * @author: wu.xu
@@ -46,7 +47,7 @@ public class WxSendAndReceiveUtils {
       public void run() {
         try {
           if (socket == null) {
-            socket = new DatagramSocket();
+            socket = new DatagramSocket(Constant.PORT);
           }
           if (mAddress == null) {
             mAddress = InetAddress.getByName(Constant.IP);
@@ -61,12 +62,14 @@ public class WxSendAndReceiveUtils {
             byte[] bytes2 = new byte[3072];
             DatagramPacket packet2 = new DatagramPacket(bytes2, bytes2.length, mAddress, Constant.PORT);
             socket.receive(packet2);
-            String data = new String(packet2.getData());
-            if (socketInterface2 != null) {
-              socketInterface2.receiveFinish(data);
+            Map<String, Object> map = SocketDataUtils.analyseBytes(packet.getData());
+            if (SocketDataUtils.dataIntegrity(map)) {
+              String data = (String) map.get(Constant.KEY_DATA);
+              if (socketInterface2 != null) {
+                socketInterface2.receiveFinish(data);
+              }
             }
           }
-
         } catch (UnknownHostException e) {
           e.printStackTrace();
         } catch (SocketException e) {

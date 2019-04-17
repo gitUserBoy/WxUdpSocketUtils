@@ -31,12 +31,14 @@ public class WxReceiveAndSendUtils {
 
   private static boolean isRunning = true;
 
-  public static void setReceivedSocketInterface(SocketInterface.ReceivedSocketInterface receivedSocketInterface) {
-    socketInterface2 = receivedSocketInterface;
+  private static int lastDataCrc32 = -1;
+
+  public static void setSendSocketInterface(SocketInterface.SendSocketInterface sendSocketInterface) {
+    socketInterface = sendSocketInterface;
   }
 
-  public static void setSendSocketInterface(SocketInterface.SendSocketInterface sendSocketInterface){
-    socketInterface = sendSocketInterface;
+  public static void setReceivedSocketInterface(SocketInterface.ReceivedSocketInterface receivedSocketInterface) {
+    socketInterface2 = receivedSocketInterface;
   }
 
   public static void receivedAndSend() {
@@ -45,23 +47,33 @@ public class WxReceiveAndSendUtils {
       @Override
       public void run() {
         try {
-          if (socket == null) {
-            socket = new DatagramSocket();
-          }
           if (mAddress == null) {
-            mAddress = InetAddress.getByName(Constant.IP);
+            mAddress = InetAddress.getByName(Constant.IP);//接收内容的Ip地址
           }
-
+          if (socket == null) {
+            socket = new DatagramSocket(Constant.PORT);//这里初始化，传入端口号，绑定一个通信地址接口.具体看内部源码
+          }
           /*接收消息*/
           while (isRunning) {
-            byte[] bytes2 = new byte[3072];
-            DatagramPacket packet2 = new DatagramPacket(bytes2, bytes2.length, mAddress, Constant.PORT);
-            socket.receive(packet2);
-            Map<String, Object> map = SocketDataUtils.analyseBytes(packet2.getData());
+            byte[] bytes = new byte[3072];
+            DatagramPacket packet = new DatagramPacket(bytes, bytes.length);
+            socket.receive(packet);
+            Map<String, Object> map = SocketDataUtils.analyseBytes(packet.getData());
             /**
-             *接收的数据包如果完整处理数据,判断TTL是否转发
+             *接收的数据包如果完整处理数据,判断TTL是否转发  , 这里因为ip固定是本机。所以发出后自己仍会收到。
              */
             if (SocketDataUtils.dataIntegrity(map)) {
+              /**
+               * 对比上个包的crc32和这个包的crc32是否相同，相同就不继续做处理
+               */
+              int crc32 = (int) map.get(Constant.KEY_CRC32);
+              if (crc32 == lastDataCrc32) {//上次的包的crc32相同
+                continue;
+              }
+
+//              Log.e("getCRC32", "getCRC32: "+ crc32);
+
+              lastDataCrc32 = crc32;
               String data = (String) map.get(Constant.KEY_DATA);
               if (socketInterface2 != null) {
                 socketInterface2.receiveFinish(data);
@@ -73,9 +85,9 @@ public class WxReceiveAndSendUtils {
               if (newTtl > 0) {
                 map.put(Constant.KEY_TTL, newTtl);
                 /*发送消息*/
-                byte[] realBytes = SocketDataUtils.assembleBytes(data.getBytes(), map);
-                DatagramPacket packet = new DatagramPacket(realBytes, realBytes.length, mAddress, Constant.PORT);
-                socket.send(packet);
+                byte[] realBytes = SocketDataUtils.assembleBytes(SocketDataUtils.getStringByte(data), map);
+                DatagramPacket packet2 = new DatagramPacket(realBytes, realBytes.length, mAddress, Constant.PORT);
+                socket.send(packet2);
                 if (socketInterface != null) {
                   socketInterface.sendFinish();
                 }

@@ -6,7 +6,6 @@ import com.udp.interfaces.SocketInterface;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
-import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.Map;
@@ -21,7 +20,6 @@ import java.util.Map;
  */
 
 public class WxReceiveUtils {
-  private static InetAddress mAddress;
   private static DatagramSocket socket;
 
   private static SocketInterface.ReceivedSocketInterface socketInterface;
@@ -37,24 +35,21 @@ public class WxReceiveUtils {
       @Override
       public void run() {
         try {
-          if (mAddress == null) {
-            mAddress = InetAddress.getByName(Constant.IP);//接收内容的Ip地址
-          }
           if (socket == null) {
-            socket = new DatagramSocket(Constant.PORT,mAddress);
-//            socket = new DatagramSocket(Constant.PORT);
+            socket = new DatagramSocket(Constant.PORT);
           }
           while (isRunning) {
             byte[] bytes = new byte[3072];
-            DatagramPacket packet = new DatagramPacket(bytes, bytes.length, mAddress, Constant.PORT);
-//            DatagramPacket packet = new DatagramPacket(bytes, bytes.length);
+            DatagramPacket packet = new DatagramPacket(bytes, bytes.length);
             socket.receive(packet);
 
             Map<String, Object> map = SocketDataUtils.analyseBytes(packet.getData());
-            int  crc32 = (int) map.get(Constant.KEY_CRC32);
-            String data = (String) map.get(Constant.KEY_DATA);
-            if (socketInterface != null) {
-              socketInterface.receiveFinish("crc32-"+crc32+data);
+            if (map!=null){
+              int  crc32 = (int) map.get(Constant.KEY_CRC32);
+              String data = (String) map.get(Constant.KEY_DATA);
+              if (socketInterface != null) {
+                socketInterface.receiveFinish("crc32-"+crc32+data);
+              }
             }
           }
       } catch (UnknownHostException e) {
@@ -75,9 +70,6 @@ public class WxReceiveUtils {
       socket.disconnect();
       socket.close();
       socket = null;
-    }
-    if (mAddress!=null){
-      mAddress = null;
     }
   }
 }

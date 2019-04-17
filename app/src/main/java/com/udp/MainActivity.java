@@ -9,14 +9,13 @@ import android.widget.TextView;
 
 import com.udp.interfaces.SocketInterface;
 import com.udp.utils.SocketDataUtils;
+import com.udp.utils.WxReceiveAndSendUtils;
 import com.udp.utils.WxReceiveUtils;
 import com.udp.utils.WxSendUtils;
 
-import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.net.SocketException;
-import java.util.Enumeration;
-
+/**
+ * UDP 通信发送方必须指定接收方ip，如果是本机app就写ip：127.0.0.1
+ */
 public class MainActivity extends AppCompatActivity implements SocketInterface.SendSocketInterface, SocketInterface.ReceivedSocketInterface{
   TextView send_result;
   TextView received_result;
@@ -24,39 +23,7 @@ public class MainActivity extends AppCompatActivity implements SocketInterface.S
   TextView ip;
   Button button;
   private String TAG = "MainActivity";
-  /**
-   * IP
-   */
-  public static String getIp(){
-    String localip=null;
-    String netip=null;
-    try {
-      Enumeration<NetworkInterface> netInterfaces = NetworkInterface.getNetworkInterfaces();
-      InetAddress ip = null;
-      boolean finded=false;
-      while(netInterfaces.hasMoreElements() && !finded){
-        NetworkInterface ni=netInterfaces.nextElement();
-        Enumeration<InetAddress> address=ni.getInetAddresses();
-        while(address.hasMoreElements()){
-          ip=address.nextElement();
-          if( !ip.isSiteLocalAddress() && !ip.isLoopbackAddress() && ip.getHostAddress().indexOf(":")==-1){
-            netip=ip.getHostAddress();
-            finded=true;
-            break;
-          }else if(ip.isSiteLocalAddress() && !ip.isLoopbackAddress() && ip.getHostAddress().indexOf(":")==-1){
-            localip=ip.getHostAddress();
-          }
-        }
-      }
-    } catch (SocketException e) {
-      e.printStackTrace();
-    }
-    if(netip!=null && !"".equals(netip)){
-      return netip;
-    }else{
-      return localip;
-    }
-  }
+
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
@@ -68,9 +35,16 @@ public class MainActivity extends AppCompatActivity implements SocketInterface.S
     button = findViewById(R.id.send);
 
     //192.168.43.156  // 小米：192.168.10.191  //华为 192.168.43.129
-    ip.setText("Constant ip : " + getIp());
+    ip.setText("Constant ip : " + SocketDataUtils.getIpAddress());
 
     WxSendUtils.setSendSocketInterface(this);
+
+    WxReceiveUtils.setReceivedSocketInterface(this);
+    WxReceiveUtils.receiverMessage();
+//    WxReceiveAndSendUtils.setReceivedSocketInterface(this);
+//    WxReceiveAndSendUtils.setSendSocketInterface(this);
+//    WxReceiveAndSendUtils.receivedAndSend();
+
     button.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View v) {
@@ -82,14 +56,11 @@ public class MainActivity extends AppCompatActivity implements SocketInterface.S
 
         String data = "测试数据";
         byte ttl = 2;
-        int crc32 = SocketDataUtils.getCRC32(data.getBytes());
+        byte[] bytes = SocketDataUtils.getStringByte(data);
+        int crc32 = SocketDataUtils.getCRC32(bytes);
         WxSendUtils.sendMessage(SocketDataUtils.createBytes(data, ttl, crc32));
       }
     });
-
-    WxReceiveUtils.setReceivedSocketInterface(this);
-    WxReceiveUtils.receiverMessage();
-
   }
 
   @Override
@@ -118,5 +89,6 @@ public class MainActivity extends AppCompatActivity implements SocketInterface.S
     super.onDestroy();
     WxReceiveUtils.dispose();
     WxSendUtils.dispose();
+    WxReceiveAndSendUtils.dispose();
   }
 }
