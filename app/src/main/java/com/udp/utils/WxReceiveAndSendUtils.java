@@ -51,7 +51,7 @@ public class WxReceiveAndSendUtils {
             mAddress = InetAddress.getByName(Constant.IP);//接收内容的Ip地址
           }
           if (socket == null) {
-            socket = new DatagramSocket(Constant.PORT);//这里初始化，传入端口号，绑定一个通信地址接口.具体看内部源码
+            socket = new DatagramSocket(Constant.RECEIVED_PORT);//这里初始化，传入端口号，绑定一个通信地址接口.具体看内部源码
           }
           /*接收消息*/
           while (isRunning) {
@@ -86,7 +86,7 @@ public class WxReceiveAndSendUtils {
                 map.put(Constant.KEY_TTL, newTtl);
                 /*发送消息*/
                 byte[] realBytes = SocketDataUtils.assembleBytes(SocketDataUtils.getStringByte(data), map);
-                DatagramPacket packet2 = new DatagramPacket(realBytes, realBytes.length, mAddress, Constant.PORT);
+                DatagramPacket packet2 = new DatagramPacket(realBytes, realBytes.length, mAddress, Constant.SEND_PORT);
                 socket.send(packet2);
                 if (socketInterface != null) {
                   socketInterface.sendFinish();

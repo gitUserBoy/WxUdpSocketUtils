@@ -23,7 +23,8 @@ package com.udp.constant;
 
 public class Constant {
   public static final String IP="127.0.0.1";
-  public static final int PORT = 30300;
+  public static final int RECEIVED_PORT = 30301;//接收端口
+  public static final int SEND_PORT = 30301;//发送端口
 
   public static final String HEAD = "EA";
 

@@ -36,7 +36,7 @@ public class WxReceiveUtils {
       public void run() {
         try {
           if (socket == null) {
-            socket = new DatagramSocket(Constant.PORT);
+            socket = new DatagramSocket(Constant.RECEIVED_PORT);
           }
           while (isRunning) {
             byte[] bytes = new byte[3072];

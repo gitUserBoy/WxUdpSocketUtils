@@ -44,7 +44,7 @@ public class WxSendUtils {
             mAddress = InetAddress.getByName(Constant.IP);
           }
 
-          DatagramPacket packet = new DatagramPacket(realBytes, realBytes.length, mAddress, Constant.PORT);
+          DatagramPacket packet = new DatagramPacket(realBytes, realBytes.length, mAddress, Constant.SEND_PORT);
           socket.send(packet);
 
           if (socketInterface!=null){

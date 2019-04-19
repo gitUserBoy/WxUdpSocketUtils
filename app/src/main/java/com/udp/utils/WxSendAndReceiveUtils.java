@@ -47,20 +47,20 @@ public class WxSendAndReceiveUtils {
       public void run() {
         try {
           if (socket == null) {
-            socket = new DatagramSocket(Constant.PORT);
+            socket = new DatagramSocket(Constant.RECEIVED_PORT);
           }
           if (mAddress == null) {
             mAddress = InetAddress.getByName(Constant.IP);
           }
 
-          DatagramPacket packet = new DatagramPacket(realBytes, realBytes.length, mAddress, Constant.PORT);
+          DatagramPacket packet = new DatagramPacket(realBytes, realBytes.length, mAddress, Constant.SEND_PORT);
           socket.send(packet);
           if (socketInterface != null) {
             socketInterface.sendFinish();
           }
           while (isRunning) {
             byte[] bytes2 = new byte[3072];
-            DatagramPacket packet2 = new DatagramPacket(bytes2, bytes2.length, mAddress, Constant.PORT);
+            DatagramPacket packet2 = new DatagramPacket(bytes2, bytes2.length);
             socket.receive(packet2);
             Map<String, Object> map = SocketDataUtils.analyseBytes(packet.getData());
             if (SocketDataUtils.dataIntegrity(map)) {
