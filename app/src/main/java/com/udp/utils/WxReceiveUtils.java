@@ -43,7 +43,14 @@ public class WxReceiveUtils {
             DatagramPacket packet = new DatagramPacket(bytes, bytes.length);
             socket.receive(packet);
 
+            //增加地址IP分别，防止同port 不同ip数据接收
+            String hostAddress = packet.getAddress().getHostAddress();
+            if (hostAddress!= null && !hostAddress.equals(Constant.IP)){
+              continue;
+            }
+
             Map<String, Object> map = SocketDataUtils.analyseBytes(packet.getData());
+
             if (map!=null){
               int  crc32 = (int) map.get(Constant.KEY_CRC32);
               String data = (String) map.get(Constant.KEY_DATA);

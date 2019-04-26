@@ -26,7 +26,7 @@ public class Constant {
   public static final int RECEIVED_PORT = 30301;//接收端口
   public static final int SEND_PORT = 30301;//发送端口
 
-  public static final String HEAD = "EA";
+  public static final short HEAD = (short) 0xEAEA;
 
   /*字节解析 Map所用key*/
   public static final String KEY_HEAD = "KEY_HEAD";

@@ -58,6 +58,14 @@ public class WxReceiveAndSendUtils {
             byte[] bytes = new byte[3072];
             DatagramPacket packet = new DatagramPacket(bytes, bytes.length);
             socket.receive(packet);
+
+            //增加地址IP分别，防止同port 不同ip数据接收
+            String hostAddress = packet.getAddress().getHostAddress();
+            if (hostAddress!= null && !hostAddress.equals(Constant.IP)){
+              continue;
+            }
+
+
             Map<String, Object> map = SocketDataUtils.analyseBytes(packet.getData());
             /**
              *接收的数据包如果完整处理数据,判断TTL是否转发  , 这里因为ip固定是本机。所以发出后自己仍会收到。

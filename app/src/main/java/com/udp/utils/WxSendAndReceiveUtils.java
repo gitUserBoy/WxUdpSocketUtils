@@ -62,7 +62,14 @@ public class WxSendAndReceiveUtils {
             byte[] bytes2 = new byte[3072];
             DatagramPacket packet2 = new DatagramPacket(bytes2, bytes2.length);
             socket.receive(packet2);
-            Map<String, Object> map = SocketDataUtils.analyseBytes(packet.getData());
+
+            //增加地址IP分别，防止同port 不同ip数据接收
+            String hostAddress = packet2.getAddress().getHostAddress();
+            if (hostAddress!= null && !hostAddress.equals(Constant.IP)){
+              continue;
+            }
+
+            Map<String, Object> map = SocketDataUtils.analyseBytes(packet2.getData());
             if (SocketDataUtils.dataIntegrity(map)) {
               String data = (String) map.get(Constant.KEY_DATA);
               if (socketInterface2 != null) {

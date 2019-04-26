@@ -1,6 +1,8 @@
 package com.udp.utils;
 
 
+import android.util.Log;
+
 import com.udp.constant.Constant;
 
 import java.io.UnsupportedEncodingException;
@@ -51,11 +53,11 @@ public class SocketDataUtils {
    */
   public static boolean dataIntegrity(Map map) {
     if (map != null) {
-      String head = (String) map.get(Constant.KEY_HEAD);
+      short head = (short) map.get(Constant.KEY_HEAD);
       int crc32 = (int) map.get(Constant.KEY_CRC32);
       String data = (String) map.get(Constant.KEY_DATA);
 
-      if (head.equals(Constant.HEAD) && crc32 == getCRC32(getStringByte(data))) {
+      if (head == Constant.HEAD && crc32 == getCRC32(getStringByte(data))) {
         return true;
       }
     }
@@ -112,8 +114,8 @@ public class SocketDataUtils {
 
     StringBuffer sb = new StringBuffer(getString(realDataBytes));
     short length = bytesToShort(lengthBytes);
-
-    map.put(Constant.KEY_HEAD, getString(headBytes));
+    short head = bytesToShort(headBytes);
+    map.put(Constant.KEY_HEAD, head);
     map.put(Constant.KEY_TTL, ttlBytes[0]);
     map.put(Constant.KEY_LENGTH, length);
     map.put(Constant.KEY_CRC32, bytesToInt(crc32Bytes));
@@ -125,12 +127,12 @@ public class SocketDataUtils {
 
   //Socket传输数据字段拼接。可防止丢包
   public static byte[] assembleBytes(byte[] data, Map<String, Object> params) {
-    String head = (String) params.get(Constant.KEY_HEAD);
+    short head = (short) params.get(Constant.KEY_HEAD);
     byte ttl = (byte) params.get(Constant.KEY_TTL);
     short length = (short) params.get(Constant.KEY_LENGTH);
     int crc32 = (int) params.get(Constant.KEY_CRC32);
 
-    byte[] headBytes = head.getBytes();
+    byte[] headBytes = shortToByte(head);
     byte[] ttlBytes = new byte[]{ttl};
     byte[] lengthBytes = shortToByte(length);
     byte[] crc32Bytes = intToBytes(crc32);
@@ -241,7 +243,7 @@ public class SocketDataUtils {
    * 得到CRC32校验码
    */
   public static int getCRC32(byte[] bytes) {
-//    Log.e("getCRC32", "onClick: " + new String(bytes));
+    Log.e("getCRC32", "onClick: " + new String(bytes));
     CRC32 crc32 = new CRC32();
     crc32.update(bytes);
     return (int) crc32.getValue();
